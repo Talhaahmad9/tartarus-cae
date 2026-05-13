@@ -49,6 +49,9 @@ export type DebateExchange = {
   contradictionDetected: boolean;
   contradictionReason?: string | null;
   evidenceKeys: string[];
+  isDevilsAdvocate?: boolean;
+  daDefense?: string | null;
+  daUpheld?: boolean | null;
 };
 
 export type ArbitrationResult = {

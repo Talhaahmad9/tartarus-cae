@@ -12,6 +12,9 @@ export interface IDebateExchange extends Document {
   contradictionDetected: boolean;
   contradictionReason?: string;
   evidenceKeys: string[];
+  isDevilsAdvocate?: boolean;
+  daDefense?: string;
+  daUpheld?: boolean;
 }
 
 const debateExchangeSchema = new Schema<IDebateExchange>({
@@ -53,6 +56,17 @@ const debateExchangeSchema = new Schema<IDebateExchange>({
   evidenceKeys: {
     type: [String],
     default: [],
+  },
+  isDevilsAdvocate: {
+    type: Boolean,
+    default: false,
+  },
+  daDefense: {
+    type: String,
+    trim: true,
+  },
+  daUpheld: {
+    type: Boolean,
   },
 });
 

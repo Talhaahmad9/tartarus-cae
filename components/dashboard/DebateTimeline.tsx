@@ -7,7 +7,13 @@ type DebateTimelineProps = {
 };
 
 export default function DebateTimeline({ debates }: DebateTimelineProps) {
+  const daExchanges = debates.filter((debate) => debate.round === 99 && debate.isDevilsAdvocate === true);
+
   const grouped = debates.reduce<Record<number, DebateExchange[]>>((acc, debate) => {
+    if (debate.round === 99 && debate.isDevilsAdvocate === true) {
+      return acc;
+    }
+
     acc[debate.round] = acc[debate.round] ?? [];
     acc[debate.round].push(debate);
     return acc;
@@ -71,6 +77,40 @@ export default function DebateTimeline({ debates }: DebateTimelineProps) {
                 ))}
               </div>
             ))}
+
+            {daExchanges.length > 0 ? (
+              <div className="space-y-3">
+                <p className="text-xs tracking-wider text-amber-400">── DEVIL&apos;S ADVOCATE INTERVENTIONS ──</p>
+                {daExchanges.map((debate, index) => (
+                  <article
+                    key={`da-${debate.targetId}-${index}`}
+                    className="rounded border border-amber-800/50 border-l-2 border-l-amber-500 bg-amber-950/20 p-3"
+                  >
+                    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs text-amber-300 font-semibold tracking-wider uppercase">
+                          ⚖ DEVIL&apos;S ADVOCATE → {debate.targetId}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-300">{debate.daDefense ?? debate.argument}</p>
+                      </div>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded border h-fit ${
+                          debate.daUpheld
+                            ? "border-emerald-500/60 text-emerald-300 bg-emerald-950/30"
+                            : "border-red-500/70 text-red-300 bg-red-950/30"
+                        }`}
+                      >
+                        {debate.daUpheld ? "DEFENSE UPHELD" : "DEFENSE COLLAPSED"}
+                      </span>
+                    </div>
+
+                    {debate.contradictionReason ? (
+                      <p className="mt-2 text-xs italic text-slate-400">{debate.contradictionReason}</p>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
       </div>

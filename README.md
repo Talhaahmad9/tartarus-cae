@@ -44,7 +44,7 @@ The CAE detected, neutralized, and surfaced this payload without ever executing 
 
 ---
 
-## ⚙️ How It Works — 4 Phase Pipeline
+## ⚙️ How It Works — 5 Phase Pipeline
 
 ### Phase 0 — Ingest
 Reads 5 telemetry shards from `Tartarus_Core.pyc` (compiled Python bytecode, reverse-engineered during implementation). Input shards are shuffled; CAE makes no positional assumptions.
@@ -55,8 +55,11 @@ Each shard initializes one isolated Cognitive Entity (one LLM call per entity). 
 ### Phase 2 — Adversarial Debate (2 Rounds)
 Entities cross-examine peer hypotheses. Challengers receive only hypothesis text, not raw telemetry. Arguments must cite variables (`v_m1`-`v_m7`) and use physical law reasoning only.
 
-### Phase 3 — Consensus Arbitration
-A final LLM call synthesizes all entity outputs and debate exchanges into deterministic JSON: absolute truth state, compromised nodes, physics matrix, supporting evidence, and injection detection metadata.
+### Phase 3 — Devil's Advocate Intervention
+Any node that receives contradiction flags is challenged again by a dedicated Devil's Advocate agent. This agent builds the strongest possible physics-based defense for the accused node, then self-evaluates whether that defense holds under scrutiny.
+
+### Phase 4 — Consensus Arbitration
+A final LLM call synthesizes entity outputs, debate exchanges, and Devil's Advocate interventions into deterministic JSON: absolute truth state, compromised nodes, physics matrix, supporting evidence, and injection detection metadata.
 
 ---
 
@@ -94,6 +97,7 @@ A final LLM call synthesizes all entity outputs and debate exchanges into determ
 - 🤖 **Data-Isolated Multi-Agent Architecture** — each entity is blind to peer raw telemetry; debate receives only derived hypothesis text, similar to Byzantine fault-tolerant distrust boundaries.
 - 📡 **Real-Time SSE Streaming Dashboard** — Server-Sent Events stream phase transitions, entity reasoning, and debate progression as they happen.
 - 🗄️ **Full MongoDB Persistence** — entities, debates, sessions, and final arbitration artifacts are persisted with `sessionId` traceability.
+- ⚖️ **Devil's Advocate Safeguard** — accused nodes receive a structured counter-argument pass before final arbitration, reducing premature consensus lock-in.
 - 🔍 **Bytecode Reverse Engineering** — `Tartarus_Core.pyc` structure and embedded payload signatures were reverse-engineered to define ingestion mapping and threat context.
 - 📊 **Deterministic JSON Output** — LLM outputs are schema-constrained, sanitized, and persisted as validated JSON artifacts.
 
@@ -121,13 +125,13 @@ A final LLM call synthesizes all entity outputs and debate exchanges into determ
 │   ├── api/
 │   │   ├── shards/route.ts                   # Telemetry ingestion from Python bridge
 │   │   ├── cae/
-│   │   │   ├── orchestrate/route.ts          # Full 4-phase AI pipeline
+│   │   │   ├── orchestrate/route.ts          # Full 5-phase AI pipeline
 │   │   │   └── status/[sessionId]/route.ts   # SSE streaming endpoint
 ├── components/dashboard/
 │   ├── CAEDashboard.tsx                      # Client orchestrator — SSE + state management
 │   ├── TelemetryGrid.tsx                     # 5 node cards with real-time status
 │   ├── EntityReasoningPanel.tsx              # Expandable entity hypothesis cards
-│   ├── DebateTimeline.tsx                    # Adversarial exchange log by round
+│   ├── DebateTimeline.tsx                    # Adversarial exchange log + Devil's Advocate interventions
 │   ├── ArbitrationResultPanel.tsx            # Final verdict + injection alert
 │   └── StatusBar.tsx                         # Pipeline phase progress indicator
 ├── lib/db/models/
