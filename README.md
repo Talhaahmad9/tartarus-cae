@@ -112,14 +112,23 @@ Each `physicsMatrix` node entry now includes a `confidenceScore` (0-100) represe
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| Frontend | Next.js 16 + React 19 | Server components for shell, client islands for live dashboard |
-| Styling | Tailwind CSS v4 | Dark terminal aesthetic, responsive grid |
-| Charting | Recharts | Real-time telemetry visualizations and trust score graphs |
-| AI / LLM | Groq API — LLaMA 3.3-70B | Fast inference for all agent reasoning and arbitration calls |
-| Database | MongoDB Atlas + Mongoose | Persistent pipeline state across all phases |
-| Streaming | Server-Sent Events (SSE) | Real-time dashboard updates as pipeline progresses |
-| Deployment | Vercel | Serverless API routes, zero-config deployment |
-| Data Bridge | Python 3 + child_process | Interface with Tartarus_Core.pyc compiled module |
+| **Frontend** | Next.js 16 + React 19 | Server components for shell, client islands for interactive dashboard |
+| **Styling** | Tailwind CSS v4 | Dark terminal aesthetic, responsive grid, theming |
+| **UI Components** | lucide-react | Consistent icon system across dashboard and forms |
+| **Charting** | Recharts | Real-time telemetry visualizations and trust score graphs |
+| **AI / LLM** | Groq API — LLaMA 3.3-70B | Fast inference for entity reasoning, debate, arbitration |
+| **Secondary AI** | Google Generative AI | Fallback reasoning engine |
+| **Database** | MongoDB Atlas + Mongoose | Persistent storage for users, sessions, entities, debates, arbitration results |
+| **Auth** | NextAuth 5 | Session management, Credentials + Google OAuth |
+| **Authentication** | bcryptjs | Password hashing for user credentials |
+| **Security** | isomorphic-dompurify | HTML sanitization to prevent XSS |
+| **Database Security** | mongoose-sanitize | MongoDB injection defense |
+| **Validation** | Zod | Schema validation for all API inputs |
+| **Email** | Resend | Transactional email (verification, password reset) |
+| **Rate Limiting** | Upstash Ratelimit + Redis | DDoS protection on auth endpoints |
+| **Streaming** | Server-Sent Events (SSE) | Real-time dashboard updates as pipeline progresses |
+| **Deployment** | Vercel | Serverless API routes, zero-config deployment |
+| **Data Bridge** | Python 3 + child_process | Interface with Tartarus_Core.pyc telemetry ingestion |
 
 ---
 
@@ -127,26 +136,63 @@ Each `physicsMatrix` node entry now includes a `confidenceScore` (0-100) represe
 
 ```text
 ├── app/
+│   ├── page.tsx                              # Home / public landing
 │   ├── dashboard/page.tsx                    # CAE Dashboard — server shell
-│   ├── api/
-│   │   ├── shards/route.ts                   # Telemetry ingestion from Python bridge
-│   │   ├── cae/
-│   │   │   ├── orchestrate/route.ts          # Full 5-phase AI pipeline
-│   │   │   └── status/[sessionId]/route.ts   # SSE streaming endpoint
-├── components/dashboard/
-│   ├── CAEDashboard.tsx                      # Client orchestrator — SSE + state management
-│   ├── TelemetryGrid.tsx                     # 5 node cards with real-time status
-│   ├── EntityReasoningPanel.tsx              # Expandable entity hypothesis cards
-│   ├── DebateTimeline.tsx                    # Adversarial exchange log + Devil's Advocate interventions
-│   ├── ArbitrationResultPanel.tsx            # Final verdict + injection alert
-│   └── StatusBar.tsx                         # Pipeline phase progress indicator
+│   ├── (auth)/
+│   │   ├── login/page.tsx
+│   │   ├── register/page.tsx
+│   │   ├── forgot-password/page.tsx
+│   │   ├── reset-password/page.tsx
+│   │   └── verify-email/page.tsx
+│   └── api/
+│       ├── auth/[...nextauth]/route.ts       # NextAuth handler (Credentials + Google OAuth)
+│       ├── health/route.ts                   # Health check endpoint
+│       ├── shards/route.ts                   # Telemetry ingestion from Python bridge
+│       └── cae/
+│           ├── orchestrate/route.ts          # Full 5-phase AI pipeline (POST)
+│           ├── replay/[sessionId]/route.ts   # Session replay (POST)
+│           └── status/[sessionId]/route.ts   # SSE streaming endpoint (GET)
+├── components/
+│   ├── auth/
+│   │   ├── LoginForm.tsx
+│   │   ├── RegisterForm.tsx
+│   │   ├── ForgotPasswordForm.tsx
+│   │   ├── ResetPasswordForm.tsx
+│   │   └── VerifyEmailForm.tsx
+│   ├── dashboard/
+│   │   ├── CAEDashboard.tsx                  # Client orchestrator — SSE + state management
+│   │   ├── TelemetryGrid.tsx                 # 5 node cards with real-time status
+│   │   ├── EntityReasoningPanel.tsx          # Expandable entity hypothesis cards
+│   │   ├── DebateTimeline.tsx                # Adversarial exchange log + Devil's Advocate interventions
+│   │   ├── ArbitrationResultPanel.tsx        # Final verdict + injection alert
+│   │   ├── StatusBar.tsx                     # Pipeline phase progress indicator
+│   │   ├── CustomShardInput.tsx              # Custom telemetry input form
+│   │   └── ContradictionChain.tsx            # Contradiction logic visualization
+│   ├── nav/ & footer/                        # Navigation, theme toggle, footer
+│   └── ui/                                   # Reusable UI primitives (Button, Input, Modal, Toast)
 ├── lib/db/models/
-│   ├── session.model.ts                      # Pipeline session state
-│   ├── entity.model.ts                       # Cognitive entity reasoning outputs
-│   ├── debate.model.ts                       # Debate exchange history
-│   └── arbitration.model.ts                  # Final arbitration results
+│   ├── user.model.ts                         # Auth user (email, password hash, verified, role)
+│   ├── otp.model.ts                          # One-time passwords for email/password reset
+│   ├── session.model.ts                      # Pipeline session state + phase progress
+│   ├── entity.model.ts                       # Cognitive entity reasoning outputs + trust scores
+│   ├── debate.model.ts                       # Debate exchange history (round, challenger, target, argument)
+│   └── arbitration.model.ts                  # Final verdict + confidence scores + injection metadata
+├── lib/
+│   ├── auth.ts                               # NextAuth config (Credentials, Google OAuth)
+│   ├── email.ts                              # Email sending via Resend
+│   ├── tokens.ts                             # OTP generation + verification
+│   ├── validate.ts                           # Zod schema validation
+│   ├── sanitize.ts                           # Injection defense + operator stripping
+│   ├── ratelimit.ts                          # Upstash Redis rate limiting
+│   └── db/mongo.ts                           # MongoDB connection pooling
+├── actions/
+│   ├── auth.ts                               # Server actions: login, register, logout
+│   └── email.ts                              # Server actions: reset OTP, reset password, resend verification
+├── hooks/
+│   ├── useReplay.ts                          # Session replay hook
+│   └── useToast.tsx                          # Toast notification management
 └── scripts/
-    └── Tartarus_Core.py                      # Python bridge for telemetry shards
+    └── Tartarus_Core.py                      # Python bridge for telemetry shard ingestion
 ```
 
 ---
@@ -195,6 +241,39 @@ curl -X POST http://localhost:3000/api/cae/orchestrate \
   -H "Content-Type: application/json" \
   -d "{}"
 ```
+
+---
+
+## 🔐 Authentication System
+
+The application uses **NextAuth 5** with dual authentication strategies:
+
+### Credentials Flow (Email + Password)
+1. User registers at `/register` with email and password
+2. Password is hashed with bcryptjs and stored in MongoDB
+3. Email verification OTP is sent via Resend API
+4. User verifies email at `/verify-email`, enabling login
+5. Login at `/login` with verified email + password
+6. Session token is issued and stored via NextAuth
+
+### Google OAuth Flow
+- Login button redirected to Google authorization
+- User grants access; Google sends OAuth code back
+- NextAuth exchanges code for Google profile
+- User auto-created in MongoDB if new; credential provider used for sign-in
+
+### Password Reset
+1. User requests reset at `/forgot-password`
+2. OTP is generated, hashed, and stored with 15-min expiry
+3. OTP sent via email
+4. User enters OTP + new password at `/reset-password`
+5. Password is hashed and updated; session logged out for security refresh
+
+### Security Features
+- **Rate Limiting**: Auth endpoints (login, register, OTP, reset) are rate-limited via Upstash Redis to prevent brute force
+- **Injection Defense**: All user inputs sanitized to strip MongoDB operators before query
+- **Session Validation**: NextAuth validates session on every request to protected routes
+- **OTP Hashing**: OTPs are hashed before storage; verification is timing-safe
 
 ---
 
