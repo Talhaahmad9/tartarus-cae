@@ -44,6 +44,7 @@ const cognitiveEntitySchema = new Schema<ICognitiveEntity>({
   trustScore: {
     type: Number,
     default: 1.0,
+    min: 0,
   },
   isCompromised: {
     type: Boolean,

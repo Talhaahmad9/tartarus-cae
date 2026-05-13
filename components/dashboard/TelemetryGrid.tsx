@@ -38,12 +38,6 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function getTrustColor(trust: number): string {
-  const normalized = clamp(trust, 0, 1);
-  const hue = normalized * 120;
-  return `hsl(${hue} 90% 45%)`;
-}
-
 function truncateLog(input: string, max = 60): string {
   return input.length > max ? `${input.slice(0, max)}...` : input;
 }
@@ -67,6 +61,9 @@ export default function TelemetryGrid({ shards, entities, physicsMatrix }: Telem
             const hasVerdict = Boolean(matrixVerdict);
             const injectionDetected = Boolean(entity?.injectionDetected);
             const trustScore = clamp(entity?.trustScore ?? 0, 0, 1);
+            const trustPercent = Math.round(trustScore * 100);
+            const trustTextClass = trustScore >= 0.7 ? "text-emerald-400" : trustScore >= 0.4 ? "text-amber-400" : "text-red-400";
+            const trustBarClass = trustScore >= 0.7 ? "bg-emerald-500" : trustScore >= 0.4 ? "bg-amber-500" : "bg-red-500";
             const suspiciousLog = /OVERRIDE|IGNORE|CRITICAL/i.test(shard.sys_log);
 
             const cardStateClass = !hasVerdict
@@ -137,16 +134,19 @@ export default function TelemetryGrid({ shards, entities, physicsMatrix }: Telem
                       SYS_LOG: {truncateLog(shard.sys_log, 60)}
                     </p>
                   </div>
-                </div>
 
-                <div className="absolute bottom-0 left-0 h-1 w-full bg-slate-800">
-                  <div
-                    className="h-full transition-[width] duration-300"
-                    style={{
-                      width: `${trustScore * 100}%`,
-                      backgroundColor: getTrustColor(trustScore),
-                    }}
-                  />
+                  <div className="mt-3">
+                    <div className="mb-1 flex items-center justify-between">
+                      <p className="text-[10px] tracking-wider text-slate-400">TRUST</p>
+                      <p className={`text-[10px] font-semibold ${trustTextClass}`}>{`${trustPercent}%`}</p>
+                    </div>
+                    <div className="h-1 w-full rounded-full bg-slate-800">
+                      <div
+                        className={`h-1 rounded-full transition-[width] duration-300 ${trustBarClass}`}
+                        style={{ width: `${trustScore * 100}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </article>
             );

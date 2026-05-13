@@ -54,12 +54,15 @@ Each shard initializes one isolated Cognitive Entity (one LLM call per entity). 
 
 ### Phase 2 — Adversarial Debate (2 Rounds)
 Entities cross-examine peer hypotheses. Challengers receive only hypothesis text, not raw telemetry. Arguments must cite variables (`v_m1`-`v_m7`) and use physical law reasoning only.
+When contradictions are detected, the target node trust score is decremented in MongoDB in real time, clamped at 0, and streamed live to the dashboard cards.
 
 ### Phase 3 — Devil's Advocate Intervention
 Any node that receives contradiction flags is challenged again by a dedicated Devil's Advocate agent. This agent builds the strongest possible physics-based defense for the accused node, then self-evaluates whether that defense holds under scrutiny.
+If the defense collapses (`daUpheld: false`), the same node receives an additional trust score decrement.
 
 ### Phase 4 — Consensus Arbitration
 A final LLM call synthesizes entity outputs, debate exchanges, and Devil's Advocate interventions into deterministic JSON: absolute truth state, compromised nodes, physics matrix, supporting evidence, and injection detection metadata.
+Each `physicsMatrix` node entry now includes a `confidenceScore` (0-100) representing certainty of its verdict.
 
 ---
 
@@ -98,6 +101,8 @@ A final LLM call synthesizes entity outputs, debate exchanges, and Devil's Advoc
 - 📡 **Real-Time SSE Streaming Dashboard** — Server-Sent Events stream phase transitions, entity reasoning, and debate progression as they happen.
 - 🗄️ **Full MongoDB Persistence** — entities, debates, sessions, and final arbitration artifacts are persisted with `sessionId` traceability.
 - ⚖️ **Devil's Advocate Safeguard** — accused nodes receive a structured counter-argument pass before final arbitration, reducing premature consensus lock-in.
+- 📉 **Live Trust Decay Engine** — contradiction events and failed Devil's Advocate defenses dynamically reduce per-node trust scores during active orchestration.
+- 📶 **Confidence-Aware Verdict Matrix** — final arbitration includes per-node `confidenceScore` values (0-100), surfaced in the UI with color-coded confidence bars.
 - 🔍 **Bytecode Reverse Engineering** — `Tartarus_Core.pyc` structure and embedded payload signatures were reverse-engineered to define ingestion mapping and threat context.
 - 📊 **Deterministic JSON Output** — LLM outputs are schema-constrained, sanitized, and persisted as validated JSON artifacts.
 

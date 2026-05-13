@@ -22,14 +22,19 @@ export default function ArbitrationResultPanel({ arbitration, entities }: Arbitr
 
   const matrixRows =
     typeof arbitration.physicsMatrix !== "object" || arbitration.physicsMatrix === null
-      ? ([] as Array<{ node: string; verdict: string; reason: string; keyContradiction: string | null }>)
+      ? ([] as Array<{ node: string; verdict: string; reason: string; keyContradiction: string | null; confidenceScore: number | null }>)
       : Object.entries(arbitration.physicsMatrix as Record<string, unknown>).map(([node, value]) => {
           const row = (value ?? {}) as Record<string, unknown>;
+          const confidenceScore =
+            typeof row.confidenceScore === "number" && Number.isFinite(row.confidenceScore)
+              ? Math.max(0, Math.min(100, row.confidenceScore))
+              : null;
           return {
             node,
             verdict: String(row.verdict ?? "UNKNOWN"),
             reason: String(row.reason ?? "—"),
             keyContradiction: row.keyContradiction ? String(row.keyContradiction) : null,
+            confidenceScore,
           };
         });
 
@@ -101,11 +106,30 @@ export default function ArbitrationResultPanel({ arbitration, entities }: Arbitr
               <tbody>
                 {matrixRows.map((row) => {
                   const compromised = row.verdict.toUpperCase() === "COMPROMISED";
+                  const confidenceColor =
+                    row.confidenceScore === null
+                      ? ""
+                      : row.confidenceScore > 70
+                        ? "bg-emerald-500"
+                        : row.confidenceScore >= 40
+                          ? "bg-amber-500"
+                          : "bg-red-500";
                   return (
                     <tr key={row.node} className="border-b border-slate-900/70 align-top">
                       <td className="py-1 pr-3 text-slate-200">{row.node}</td>
                       <td className={compromised ? "py-1 pr-3 font-semibold text-red-300" : "py-1 pr-3 font-semibold text-emerald-300"}>
-                        {row.verdict}
+                        <div>{row.verdict}</div>
+                        {row.confidenceScore !== null ? (
+                          <div className="mt-1">
+                            <p className="text-[10px] font-normal text-slate-400">{`${Math.round(row.confidenceScore)}% confident`}</p>
+                            <div className="mt-1 h-1 w-full rounded-full bg-slate-800">
+                              <div
+                                className={`h-1 rounded-full ${confidenceColor}`}
+                                style={{ width: `${row.confidenceScore}%` }}
+                              />
+                            </div>
+                          </div>
+                        ) : null}
                       </td>
                       <td className="py-1 pr-3 text-slate-300">{row.reason}</td>
                       <td className="py-1 text-slate-400">{row.keyContradiction ?? "—"}</td>
