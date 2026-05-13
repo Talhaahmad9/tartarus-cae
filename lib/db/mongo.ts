@@ -28,6 +28,9 @@ export async function connectMongo(): Promise<Connection> {
       .connect(uri, {
         bufferCommands: false,
         dbName,
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 30000,
       })
       .then((m) => {
         console.log(`[mongo] Connected to database "${dbName}"`);

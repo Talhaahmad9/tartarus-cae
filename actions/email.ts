@@ -56,18 +56,7 @@ export async function sendPasswordResetOTPAction(
       expiresAt,
     });
 
-    const emailResult = await sendPasswordResetEmail({
-      to: email,
-      name: user.name,
-      otp,
-    });
-
-    if (!emailResult.success) {
-      return {
-        success: false,
-        error: "Unable to send reset code right now. Please try again.",
-      };
-    }
+    await sendPasswordResetEmail({ to: email, name: user.name, otp });
 
     return genericSuccess;
   } catch (err) {
