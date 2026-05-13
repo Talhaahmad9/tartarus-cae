@@ -1,5 +1,8 @@
 "use client";
 
+import { Line, LineChart, ResponsiveContainer } from "recharts";
+import type { TrustHistoryPoint } from "@/components/dashboard/CAEDashboard";
+
 type TelemetryGridProps = {
   shards: Array<{
     node: string;
@@ -18,6 +21,7 @@ type TelemetryGridProps = {
     trustScore: number;
     injectionDetected: boolean;
   }>;
+  trustHistory: Record<string, TrustHistoryPoint[]>;
 };
 
 type PhysicsMatrix = Record<string, { verdict: string }>;
@@ -43,7 +47,7 @@ function truncateLog(input: string, max = 60): string {
 }
 
 type TelemetryGridFinalProps = TelemetryGridProps & { physicsMatrix?: PhysicsMatrix };
-export default function TelemetryGrid({ shards, entities, physicsMatrix }: TelemetryGridFinalProps) {
+export default function TelemetryGrid({ shards, entities, trustHistory, physicsMatrix }: TelemetryGridFinalProps) {
   return (
     <section className="rounded border border-slate-800 bg-slate-950/50 p-4">
       <h2 className="text-sm uppercase tracking-wider text-cyan-300">
@@ -64,6 +68,8 @@ export default function TelemetryGrid({ shards, entities, physicsMatrix }: Telem
             const trustPercent = Math.round(trustScore * 100);
             const trustTextClass = trustScore >= 0.7 ? "text-emerald-400" : trustScore >= 0.4 ? "text-amber-400" : "text-red-400";
             const trustBarClass = trustScore >= 0.7 ? "bg-emerald-500" : trustScore >= 0.4 ? "bg-amber-500" : "bg-red-500";
+            const trustLineColor = trustScore >= 0.7 ? "#10b981" : trustScore >= 0.4 ? "#f59e0b" : "#ef4444";
+            const nodeTrustHistory = trustHistory[shard.node] ?? [];
             const suspiciousLog = /OVERRIDE|IGNORE|CRITICAL/i.test(shard.sys_log);
 
             const cardStateClass = !hasVerdict
@@ -146,6 +152,23 @@ export default function TelemetryGrid({ shards, entities, physicsMatrix }: Telem
                         style={{ width: `${trustScore * 100}%` }}
                       />
                     </div>
+
+                    {nodeTrustHistory.length >= 2 ? (
+                      <div className="mt-2 h-10 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={nodeTrustHistory} margin={{ top: 1, right: 0, bottom: 1, left: 0 }}>
+                            <Line
+                              type="monotone"
+                              dataKey="score"
+                              stroke={trustLineColor}
+                              strokeWidth={2}
+                              dot={false}
+                              isAnimationActive={false}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </article>

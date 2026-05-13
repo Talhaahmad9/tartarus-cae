@@ -114,6 +114,7 @@ Each `physicsMatrix` node entry now includes a `confidenceScore` (0-100) represe
 |---|---|---|
 | Frontend | Next.js 16 + React 19 | Server components for shell, client islands for live dashboard |
 | Styling | Tailwind CSS v4 | Dark terminal aesthetic, responsive grid |
+| Charting | Recharts | Real-time telemetry visualizations and trust score graphs |
 | AI / LLM | Groq API — LLaMA 3.3-70B | Fast inference for all agent reasoning and arbitration calls |
 | Database | MongoDB Atlas + Mongoose | Persistent pipeline state across all phases |
 | Streaming | Server-Sent Events (SSE) | Real-time dashboard updates as pipeline progresses |

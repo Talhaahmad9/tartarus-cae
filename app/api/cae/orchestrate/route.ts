@@ -16,7 +16,8 @@ async function callGemini(systemPrompt: string, userPrompt: string): Promise<str
       { role: "system", content: `${systemPrompt}\n\nRespond ONLY with valid JSON. No markdown, no backticks, no preamble.` },
       { role: "user", content: userPrompt },
     ],
-    temperature: 0.3,
+    temperature: 0,
+    seed: 42,
   });
   const text = (completion.choices[0]?.message?.content ?? "").replace(/```json|```/g, "").trim();
   return text;
@@ -190,21 +191,26 @@ export async function POST(request: NextRequest) {
   try {
     await connectMongo();
 
-    // Request body is intentionally optional for this pipeline endpoint.
-    await request.json().catch(() => ({}));
+    const requestBody = (await request.json().catch(() => ({}))) as { customShards?: TelemetryShard[] };
 
-    const origin = new URL(request.url).origin;
-    const shardsResponse = await fetch(`${origin}/api/shards`, {
-      method: "GET",
-      cache: "no-store",
-    });
+    let shards: TelemetryShard[] = [];
 
-    if (!shardsResponse.ok) {
-      throw new Error(`Failed to fetch shards: ${shardsResponse.status}`);
+    if (Array.isArray(requestBody.customShards) && requestBody.customShards.length > 0) {
+      shards = requestBody.customShards;
+    } else {
+      const origin = new URL(request.url).origin;
+      const shardsResponse = await fetch(`${origin}/api/shards`, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!shardsResponse.ok) {
+        throw new Error(`Failed to fetch shards: ${shardsResponse.status}`);
+      }
+
+      const shardsJson = (await shardsResponse.json()) as { shards?: TelemetryShard[] };
+      shards = Array.isArray(shardsJson.shards) ? shardsJson.shards : [];
     }
-
-    const shardsJson = (await shardsResponse.json()) as { shards?: TelemetryShard[] };
-    const shards = Array.isArray(shardsJson.shards) ? shardsJson.shards : [];
 
     if (shards.length === 0) {
       throw new Error("No telemetry shards available");

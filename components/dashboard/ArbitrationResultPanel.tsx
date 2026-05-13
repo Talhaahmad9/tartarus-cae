@@ -101,6 +101,7 @@ export default function ArbitrationResultPanel({ arbitration, entities }: Arbitr
                   <th className="py-1 pr-3 text-left">Verdict</th>
                   <th className="py-1 pr-3 text-left">Reason</th>
                   <th className="py-1 text-left">Key Contradiction</th>
+                  <th className="py-1 pl-3 text-left">Confidence</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,9 +110,9 @@ export default function ArbitrationResultPanel({ arbitration, entities }: Arbitr
                   const confidenceColor =
                     row.confidenceScore === null
                       ? ""
-                      : row.confidenceScore > 70
+                      : row.confidenceScore >= 80
                         ? "bg-emerald-500"
-                        : row.confidenceScore >= 40
+                        : row.confidenceScore >= 50
                           ? "bg-amber-500"
                           : "bg-red-500";
                   return (
@@ -119,20 +120,24 @@ export default function ArbitrationResultPanel({ arbitration, entities }: Arbitr
                       <td className="py-1 pr-3 text-slate-200">{row.node}</td>
                       <td className={compromised ? "py-1 pr-3 font-semibold text-red-300" : "py-1 pr-3 font-semibold text-emerald-300"}>
                         <div>{row.verdict}</div>
-                        {row.confidenceScore !== null ? (
-                          <div className="mt-1">
-                            <p className="text-[10px] font-normal text-slate-400">{`${Math.round(row.confidenceScore)}% confident`}</p>
-                            <div className="mt-1 h-1 w-full rounded-full bg-slate-800">
-                              <div
-                                className={`h-1 rounded-full ${confidenceColor}`}
-                                style={{ width: `${row.confidenceScore}%` }}
-                              />
-                            </div>
-                          </div>
-                        ) : null}
                       </td>
                       <td className="py-1 pr-3 text-slate-300">{row.reason}</td>
                       <td className="py-1 text-slate-400">{row.keyContradiction ?? "—"}</td>
+                      <td className="py-1 pl-3 text-slate-300">
+                        {row.confidenceScore !== null ? (
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-full rounded-full bg-slate-800">
+                              <div
+                                className={`h-1.5 rounded-full ${confidenceColor}`}
+                                style={{ width: `${row.confidenceScore}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-slate-300">{`${Math.round(row.confidenceScore)}%`}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-500">—</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
